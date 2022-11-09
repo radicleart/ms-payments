@@ -1,0 +1,36 @@
+version: "3"
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  isolation-network:
+    driver: bridge
+
+services:
+  mongodb:
+    image: mongo:4.2
+    container_name: "payments_mongo"
+    environment:
+      - MONGO_DATA_DIR=/data/db
+      - MONGO_LOG_DIR=/dev/null
+      #- MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      #- MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+    volumes:
+      - ./volumes/data/db:/data/db
+    ports:
+      - 27020:27017
+    command: mongod --bind_ip_all --logpath=/dev/null
+  ms_payments:
+    image: mijoco/ms_payments:latest
+    container_name: "payments_api"
+    environment:
+      - spring.profiles.active=${spring_profiles_active}
+      - GITHUB_PAT=${GITHUB_PAT}
+      - JAVA_OPTS=-Xm2g -Xms2g
+    ports:
+      - "8404:8104"
+      - "8405:8080"
+    links:
+      - mongodb
